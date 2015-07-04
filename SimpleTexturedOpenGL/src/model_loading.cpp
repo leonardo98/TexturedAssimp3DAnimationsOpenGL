@@ -430,7 +430,7 @@ int WINAPI WinMain( HINSTANCE hInstance,         // The instance
 	createAILogger();
 	logInfo("App fired!");
 
-	// Check the command line for an override file path.
+	// Check the command line for an override file path. 
 	int argc;
 	LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
 	if (argv != NULL && argc > 1)

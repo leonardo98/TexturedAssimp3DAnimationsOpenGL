@@ -20,9 +20,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\boost_includes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\AnimationController.h">
       <Filter>Header Files</Filter>
     </ClInclude>

@@ -114,7 +114,6 @@ copy ..\..\..\bin\assimp_release-dll_Win32\Assimp32.dll ..\..\bin
     <ClCompile Include="src\model_loading.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\boost_includes.h" />
     <ClInclude Include="src\AnimationController.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
