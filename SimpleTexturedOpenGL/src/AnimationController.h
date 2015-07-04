@@ -359,8 +359,10 @@ public:
 		out.d1 = 0.f;   out.d2 = 0.f;   out.d3 = 0.f;   out.d4 = 1.f;
 	}
 
-	void ReadNodeHeirarchy(float AnimationTime, const aiNode* pNode, const aiMatrix4x4& ParentTransform)
+	void ReadNodeHeirarchy(float AnimationTime, const aiNode* pNode, const aiMatrix4x4& ParentTransform, int stopAnimLevel)
 	{ 
+		float time(AnimationTime);
+
 		std::string NodeName(pNode->mName.data);
 
 		const aiAnimation* pAnimation = scene->mAnimations[0];
@@ -372,25 +374,29 @@ public:
 		if (pNodeAnim) {
 			// Interpolate scaling and generate scaling transformation matrix
 			aiVector3D Scaling;
-			CalcInterpolatedScaling(Scaling, AnimationTime, pNodeAnim);
+			CalcInterpolatedScaling(Scaling, time, pNodeAnim);
 			aiMatrix4x4 ScalingM;
 			aiMatrix4x4::Scaling(Scaling, ScalingM);
 
 			// Interpolate rotation and generate rotation transformation matrix
 			aiQuaternion RotationQ;
-			CalcInterpolatedRotation(RotationQ, AnimationTime, pNodeAnim); 
+			CalcInterpolatedRotation(RotationQ, time, pNodeAnim); 
 			aiMatrix4x4 RotationM;
 			InitM4FromM3(RotationM, RotationQ.GetMatrix());
 
 			// Interpolate translation and generate translation transformation matrix
 			aiVector3D Translation;
-			CalcInterpolatedPosition(Translation, AnimationTime, pNodeAnim);
+			{
+				float time(stopAnimLevel <= 0 ? AnimationTime : 0.f);
+				CalcInterpolatedPosition(Translation, time, pNodeAnim);
+			}
 			aiMatrix4x4 TranslationM;
 			aiMatrix4x4::Translation(Translation, TranslationM);
 
 			// Combine the above transformations
 			NodeTransformation = TranslationM * RotationM * ScalingM;
 		}
+		stopAnimLevel--;
 
 		aiMatrix4x4 GlobalTransformation = ParentTransform * NodeTransformation;
 
@@ -401,7 +407,7 @@ public:
 		}
 
 		for (uint i = 0 ; i < pNode->mNumChildren ; i++) {
-			ReadNodeHeirarchy(AnimationTime, pNode->mChildren[i], GlobalTransformation);
+			ReadNodeHeirarchy(AnimationTime, pNode->mChildren[i], GlobalTransformation, stopAnimLevel);
 		}
 	} 
 
@@ -424,7 +430,7 @@ public:
 		float TimeInTicks = TimeInSeconds * TicksPerSecond;
 		float AnimationTime = fmod(TimeInTicks, scene->mAnimations[0]->mDuration);
 
-		ReadNodeHeirarchy(AnimationTime, scene->mRootNode, Identity);
+		ReadNodeHeirarchy(AnimationTime, scene->mRootNode, Identity, 2);
 
 		Transforms.resize(m_NumBones);
 
@@ -862,9 +868,3 @@ public:
 
 
 };
-//std::vector<uint> m_Buffers;
-//enum EnumBuffers
-//{
-//	BONE_VB
-//};
-
