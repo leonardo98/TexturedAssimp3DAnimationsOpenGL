@@ -432,14 +432,16 @@ int WINAPI WinMain( HINSTANCE hInstance,         // The instance
 
 	// Check the command line for an override file path.
 	int argc;
-	//LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-	//if (argv != NULL && argc > 1)
-	//{
-	//	std::wstring modelpathW(argv[1]);
-	//	modelpath = std::string(modelpathW.begin(), modelpathW.end());
-	//}
-
-	if (!controller.Import3DFromFile()) return 0;
+	LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+	if (argv != NULL && argc > 1)
+	{
+		std::wstring modelpathW(argv[1]);
+		if (!controller.Import3DFromFile(std::string(modelpathW.begin(), modelpathW.end()))) return 0;
+	}
+	else
+	{
+		if (!controller.Import3DFromFile()) return 0;
+	}
 
 	logInfo("=============== Post Import ====================");
 
