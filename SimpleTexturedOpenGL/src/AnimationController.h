@@ -50,7 +50,7 @@ struct BoneInfo
 	aiMatrix4x4 FinalTransformation;
 };
 
-#define INVALID_MATERIAL 0xFFFFFFFFF;
+#define INVALID_MATERIAL 0xFFFFFFFF;
 
 struct MeshEntry {
 	MeshEntry()
@@ -71,9 +71,7 @@ class AnimationController
 {
 private:
 
-	GLfloat		xrot;
-	GLfloat		yrot;
-	GLfloat		zrot;
+	aiVector3D _rotation;
 
 	std::string m_ModelPath;
 
@@ -215,6 +213,9 @@ private:
 
 public:
 
+	void SetRotation(const aiVector3D &r) { _rotation = r; }
+	aiVector3D GetRotation() { return _rotation; }
+
 	~AnimationController()
 	{
 		Release();
@@ -237,6 +238,7 @@ public:
 		: m_NumBones(0)
 		, scene(NULL)
 		, m_ModelPath(modelpath)
+		, _rotation(0.f)
 	{}
 
 	uint FindRotation(float AnimationTime, const aiNodeAnim* pNodeAnim)
@@ -632,10 +634,11 @@ public:
 
 						if(mesh->HasTextureCoords(0))		//HasTextureCoords(texture_coordinates_set)
 						{
-							glTexCoord2f(mesh->mTextureCoords[0][vertexIndex].x, 1 - mesh->mTextureCoords[0][vertexIndex].y); //mTextureCoords[channel][vertex]
+							glTexCoord2f(m_TextureUVCoords[m_Entries[n].BaseVertex + vertexIndex].x, 1 - m_TextureUVCoords[m_Entries[n].BaseVertex + vertexIndex].y); //mTextureCoords[channel][vertex]
 						}
 
-						glNormal3fv(&m_Normales[m_Entries[n].BaseVertex + vertexIndex].x);
+						//glNormal3fv(&m_Normales[m_Entries[n].BaseVertex + vertexIndex].x);
+						glNormal3fv(&m_NormalesOut[m_Entries[n].BaseVertex + vertexIndex].x);
 						glVertex3fv(&m_VericiesOut[m_Entries[n].BaseVertex + vertexIndex].x);
 				}
 				glEnd();
@@ -651,14 +654,6 @@ public:
 		glPopMatrix();
 	}
 
-
-	void drawAiScene(const aiScene* scene)
-	{
-		logInfo("drawing objects");
-
-		recursive_render(scene, scene->mRootNode, 0.5);
-
-	}
 	void Mul(aiMatrix4x4 &out, aiMatrix4x4 &in, float m)
 	{
 		out.a1 += in.a1 * m; out.a2 += in.a2 * m; out.a3 += in.a3 * m; out.a4 += in.a4 * m;
@@ -703,9 +698,9 @@ public:
 			if (m_Mass[i].Weights[2] > 0) Mul(m, Transforms[m_Mass[i].IDs[2]], m_Mass[i].Weights[2]);
 			if (m_Mass[i].Weights[3] > 0) Mul(m, Transforms[m_Mass[i].IDs[3]], m_Mass[i].Weights[3]);
 			if (m_Mass[i].Weights[4] > 0) Mul(m, Transforms[m_Mass[i].IDs[4]], m_Mass[i].Weights[4]);
-			m_VericiesOut[i] = m * m_Vericies[i];
 			m_NormalesOut[i] = m * m_Normales[i];
 			m_NormalesOut[i].Normalize();
+			m_VericiesOut[i] = m * m_Vericies[i];
 		}
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	// Clear The Screen And The Depth Buffer
@@ -714,17 +709,13 @@ public:
 
 		glTranslatef(0.0f, -25.0f, -70.0f);	// Move 40 Units And Into The Screen	
 
-		glScalef(100.0f, 100.0f, 100.0f);	// Move 40 Units And Into The Screen	
+		glRotatef(_rotation.x, 1.0f, 0.0f, 0.0f);
+		glRotatef(_rotation.y, 0.0f, 1.0f, 0.0f);
+		glRotatef(_rotation.z, 0.0f, 0.0f, 1.0f);
 
-		glRotatef(xrot, 1.0f, 0.0f, 0.0f);
-		glRotatef(yrot, 0.0f, 1.0f, 0.0f);
-		glRotatef(zrot, 0.0f, 0.0f, 1.0f);
+		logInfo("drawing objects");
 
-		drawAiScene(scene);
-
-		//xrot+=0.3f;
-		yrot+=0.2f;
-		//zrot+=0.4f;
+		recursive_render(scene, scene->mRootNode, 5);
 
 		return TRUE;					// okay
 	}

@@ -138,15 +138,24 @@ int InitGL()
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);	// Really Nice Perspective Calculation
 
 
-	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0);    // Uses default lighting parameters
-	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-	glEnable(GL_NORMALIZE);
+	{
+		// направленный источник света
+		glEnable(GL_LIGHTING);
+		GLfloat light0_diffuse[] = {0.7, 0.7, 0.7};
+		GLfloat light0_direction[] = {0.0, 1.0, 1.0, 0.0};
+		glEnable(GL_LIGHT0);
+		glLightfv(GL_LIGHT0, GL_DIFFUSE, light0_diffuse);
+		glLightfv(GL_LIGHT0, GL_POSITION, light0_direction);
+	}
+	//glEnable(GL_LIGHTING);
+	//glEnable(GL_LIGHT0);    // Uses default lighting parameters
+	//glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+	//glEnable(GL_NORMALIZE);
 
-	glLightfv(GL_LIGHT1, GL_AMBIENT, LightAmbient);
-	glLightfv(GL_LIGHT1, GL_DIFFUSE, LightDiffuse);
-	glLightfv(GL_LIGHT1, GL_POSITION, LightPosition);
-	glEnable(GL_LIGHT1);
+	//glLightfv(GL_LIGHT1, GL_AMBIENT, LightAmbient);
+	//glLightfv(GL_LIGHT1, GL_DIFFUSE, LightDiffuse);
+	//glLightfv(GL_LIGHT1, GL_POSITION, LightPosition);
+	//glEnable(GL_LIGHT1);
 
 	return TRUE;					// Initialization Went OK
 }
@@ -482,6 +491,18 @@ int WINAPI WinMain( HINSTANCE hInstance,         // The instance
 				{
 					controller.DrawGLScene();
 					SwapBuffers(hDC);
+				}
+				if (keys[VK_LEFT])
+				{
+					controller.SetRotation(aiVector3D(controller.GetRotation().x
+						, controller.GetRotation().y + 10.f
+						, controller.GetRotation().z));
+				}
+				if (keys[VK_RIGHT])
+				{
+					controller.SetRotation(aiVector3D(controller.GetRotation().x
+						, controller.GetRotation().y - 10.f
+						, controller.GetRotation().z));
 				}
 			}
 
