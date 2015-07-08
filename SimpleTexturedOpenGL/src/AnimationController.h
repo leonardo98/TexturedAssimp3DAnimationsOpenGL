@@ -648,7 +648,7 @@ public:
 		// draw all children
 		for (n = 0; n < nd->mNumChildren; ++n)
 		{
-			recursive_render(sc, nd->mChildren[n], scale);
+			recursive_render(sc, nd->mChildren[n], 1);
 		}
 
 		glPopMatrix();
@@ -660,6 +660,13 @@ public:
 		out.b1 += in.b1 * m; out.b2 += in.b2 * m; out.b3 += in.b3 * m; out.b4 += in.b4 * m;
 		out.c1 += in.c1 * m; out.c2 += in.c2 * m; out.c3 += in.c3 * m; out.c4 += in.c4 * m;
 		out.d1 += in.d1 * m; out.d2 += in.d2 * m; out.d3 += in.d3 * m; out.d4 += in.d4 * m;
+	}
+
+	void ShortMul(aiVector3D &out, const aiMatrix4x4 &m, const aiVector3D &in)
+	{
+		out.x = m.a1 * in.x + m.a2 * in.y + m.a3 * in.z;
+		out.y = m.b1 * in.x + m.b2 * in.y + m.b3 * in.z;
+		out.z = m.c1 * in.x + m.c2 * in.y + m.c3 * in.z;
 	}
 
 	long long GetCurrentTimeMillis()
@@ -698,9 +705,11 @@ public:
 			if (m_Mass[i].Weights[2] > 0) Mul(m, Transforms[m_Mass[i].IDs[2]], m_Mass[i].Weights[2]);
 			if (m_Mass[i].Weights[3] > 0) Mul(m, Transforms[m_Mass[i].IDs[3]], m_Mass[i].Weights[3]);
 			if (m_Mass[i].Weights[4] > 0) Mul(m, Transforms[m_Mass[i].IDs[4]], m_Mass[i].Weights[4]);
-			m_NormalesOut[i] = m * m_Normales[i];
-			m_NormalesOut[i].Normalize();
+
 			m_VericiesOut[i] = m * m_Vericies[i];
+
+			ShortMul(m_NormalesOut[i], m, m_Normales[i]);
+
 		}
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	// Clear The Screen And The Depth Buffer
@@ -715,7 +724,8 @@ public:
 
 		logInfo("drawing objects");
 
-		recursive_render(scene, scene->mRootNode, 5);
+		//glScalef(5.0f, 5.0f, 5.0f);	// Move 40 Units And Into The Screen	
+		recursive_render(scene, scene->mRootNode, 25);
 
 		return TRUE;					// okay
 	}
