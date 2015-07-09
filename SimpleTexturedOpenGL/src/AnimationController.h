@@ -9,7 +9,7 @@
 #include "assimp/DefaultLogger.hpp"
 #include "assimp/LogStream.hpp"
 
-#define NUM_BONES_PER_VEREX 5
+#define NUM_BONES_PER_VEREX 4
 typedef unsigned int uint;
 
 struct VertexBoneData
@@ -700,11 +700,10 @@ public:
 			m.b1 = m.b2 = m.b3 = m.b4 = 0.f;
 			m.c1 = m.c2 = m.c3 = m.c4 = 0.f;
 			m.d1 = m.d2 = m.d3 = m.d4 = 0.f;
-			if (m_Mass[i].Weights[0] > 0) Mul(m, Transforms[m_Mass[i].IDs[0]], m_Mass[i].Weights[0]);
-			if (m_Mass[i].Weights[1] > 0) Mul(m, Transforms[m_Mass[i].IDs[1]], m_Mass[i].Weights[1]);
-			if (m_Mass[i].Weights[2] > 0) Mul(m, Transforms[m_Mass[i].IDs[2]], m_Mass[i].Weights[2]);
-			if (m_Mass[i].Weights[3] > 0) Mul(m, Transforms[m_Mass[i].IDs[3]], m_Mass[i].Weights[3]);
-			if (m_Mass[i].Weights[4] > 0) Mul(m, Transforms[m_Mass[i].IDs[4]], m_Mass[i].Weights[4]);
+			for (int b = 0; b < NUM_BONES_PER_VEREX; ++b)
+			{
+				if (m_Mass[i].Weights[b] > 0) Mul(m, Transforms[m_Mass[i].IDs[b]], m_Mass[i].Weights[b]);
+			}
 
 			m_VericiesOut[i] = m * m_Vericies[i];
 
