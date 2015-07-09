@@ -29,7 +29,7 @@
 
 //AnimationController controller("C:/Users/lenya_en/Downloads/ogldev-source/Content/boblampclean.md5mesh");
 //AnimationController controller("C:/Dropbox/GAME/Resources/characters/main-hero/mainhero@walk01.fbx");
-AnimationController controller("C:/Dropbox/Projects/Moon/walking/walking.dae");
+AnimationController controller("C:/Dropbox/Projects/Moon/pers/walking.dae");
 
 // The default hard-coded path. Can be overridden by supplying a path through the command line.
 
@@ -450,6 +450,7 @@ int WINAPI WinMain( HINSTANCE hInstance,         // The instance
 	else
 	{
 		if (!controller.Import3DFromFile()) return 0;
+		if (!controller.Add3DAnimFromFile("C:/Dropbox/Projects/Moon/pers/idle.dae")) return 0;
 	}
 
 	logInfo("=============== Post Import ====================");
@@ -495,13 +496,13 @@ int WINAPI WinMain( HINSTANCE hInstance,         // The instance
 				if (keys[VK_LEFT])
 				{
 					controller.SetRotation(aiVector3D(controller.GetRotation().x
-						, controller.GetRotation().y + 10.f
+						, controller.GetRotation().y - 10.f
 						, controller.GetRotation().z));
 				}
 				if (keys[VK_RIGHT])
 				{
 					controller.SetRotation(aiVector3D(controller.GetRotation().x
-						, controller.GetRotation().y - 10.f
+						, controller.GetRotation().y + 10.f
 						, controller.GetRotation().z));
 				}
 			}
