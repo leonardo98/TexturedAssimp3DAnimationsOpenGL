@@ -80,6 +80,7 @@ private:
 	Assimp::Importer importer;
 	
 	// вся сцена из файла храниться тут
+	std::vector<const aiScene*> _scenes;
 	const aiScene* _curScene;
 
 	// todo: узнать зачем это
@@ -272,7 +273,7 @@ public:
 	void BoneTransform(float TimeInSeconds, std::vector<aiMatrix4x4>& Transforms)
 	{
 		aiMatrix4x4 Identity;
-		InitIdentity(Identity);
+		InitIdentityM4(Identity);
 
 		float TicksPerSecond = _curScene->mAnimations[0]->mTicksPerSecond != 0 ? 
 			_curScene->mAnimations[0]->mTicksPerSecond : 25.0f;
@@ -520,12 +521,12 @@ public:
 			m.d1 = m.d2 = m.d3 = m.d4 = 0.f;
 			for (int b = 0; b < NUM_BONES_PER_VEREX; ++b)
 			{
-				if (m_Mass[i].Weights[b] > 0) Mul(m, Transforms[m_Mass[i].IDs[b]], m_Mass[i].Weights[b]);
+				if (m_Mass[i].Weights[b] > 0) MulM4(m, Transforms[m_Mass[i].IDs[b]], m_Mass[i].Weights[b]);
 			}
 
 			m_VericiesOut[i] = m * m_Vericies[i];
 
-			ShortMul(m_NormalesOut[i], m, m_Normales[i]);
+			ShortMulM4(m_NormalesOut[i], m, m_Normales[i]);
 
 		}
 

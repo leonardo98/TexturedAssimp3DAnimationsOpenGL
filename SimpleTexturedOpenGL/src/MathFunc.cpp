@@ -143,7 +143,7 @@ void InitM4FromM3(aiMatrix4x4& out, const aiMatrix3x3& in)
 }
 
 
-void InitIdentity(aiMatrix4x4 &m)
+void InitIdentityM4(aiMatrix4x4 &m)
 {
 	m.a1 = 1.f; m.a2 = 0.f; m.a3 = 0.f; m.a4 = 0.f;
 	m.b1 = 0.f; m.b2 = 1.f; m.b3 = 0.f; m.b4 = 0.f;
@@ -152,7 +152,7 @@ void InitIdentity(aiMatrix4x4 &m)
 	assert(m.IsIdentity());
 }
 
-void Mul(aiMatrix4x4 &out, aiMatrix4x4 &in, float m)
+void MulM4(aiMatrix4x4 &out, aiMatrix4x4 &in, float m)
 {
 	out.a1 += in.a1 * m; out.a2 += in.a2 * m; out.a3 += in.a3 * m; out.a4 += in.a4 * m;
 	out.b1 += in.b1 * m; out.b2 += in.b2 * m; out.b3 += in.b3 * m; out.b4 += in.b4 * m;
@@ -160,7 +160,7 @@ void Mul(aiMatrix4x4 &out, aiMatrix4x4 &in, float m)
 	out.d1 += in.d1 * m; out.d2 += in.d2 * m; out.d3 += in.d3 * m; out.d4 += in.d4 * m;
 }
 
-void ShortMul(aiVector3D &out, const aiMatrix4x4 &m, const aiVector3D &in)
+void ShortMulM4(aiVector3D &out, const aiMatrix4x4 &m, const aiVector3D &in)
 {
 	out.x = m.a1 * in.x + m.a2 * in.y + m.a3 * in.z;
 	out.y = m.b1 * in.x + m.b2 * in.y + m.b3 * in.z;
