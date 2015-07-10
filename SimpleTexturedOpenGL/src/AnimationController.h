@@ -74,7 +74,9 @@ private:
 
 	std::string m_ModelPath;
 
-	long long m_startTime;
+	long long m_lastTime;
+	
+	float RunningTime;
 
 	// Create an instance of the Importer class
 	std::vector<Assimp::Importer *> _importers;
@@ -326,7 +328,8 @@ public:
 
 	bool InitFromScene(const aiScene* pScene)
 	{ 
-		m_startTime = -1;
+		m_lastTime = -1;
+		RunningTime = 0.f;
 
 		m_Entries.resize(pScene->mNumMeshes);
 
@@ -511,13 +514,20 @@ public:
 		glPopMatrix();
 	}
 
-	int DrawGLScene()				//Here's where we do all the drawing
+	void Update(/*float dt*/)
 	{
-		if (m_startTime == -1)
+		if (m_lastTime == -1)
 		{
-			m_startTime = GetCurrentTimeMillis();
+			m_lastTime = GetCurrentTimeMillis();
 		}
-		float RunningTime = (float)((double)GetCurrentTimeMillis() - (double)m_startTime) / 1000.0f;
+		long long newTime = GetCurrentTimeMillis();
+		float dt = (float)((double)newTime - (double)m_lastTime) / 1000.0f;
+		RunningTime += dt;
+		m_lastTime = newTime;
+	}
+
+	int DrawGLScene()				//Here's where we do all the drawing
+	{		
 		BoneTransform(RunningTime, Transforms);
 		m_VericiesOut.resize(m_Vericies.size());
 		m_NormalesOut.resize(m_Vericies.size());

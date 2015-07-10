@@ -457,6 +457,7 @@ int WINAPI WinMain( HINSTANCE hInstance,         // The instance
 				}
 				else
 				{
+					controller.Update();
 					controller.DrawGLScene();
 					SwapBuffers(hDC);
 				}
