@@ -224,13 +224,13 @@ public:
 		, _rotation(0.f)
 	{}
 
-	void ReadNodeHeirarchy(float AnimationTime, const aiNode* pNode, const aiMatrix4x4& ParentTransform, int stopAnimLevel)
+	void ReadNodeHeirarchy(const aiScene * scene, float AnimationTime, const aiNode* pNode, const aiMatrix4x4& ParentTransform, int stopAnimLevel)
 	{ 
 		float time(AnimationTime);
 
 		std::string NodeName(pNode->mName.data);
 
-		const aiAnimation* pAnimation = _scenes[_curScene]->mAnimations[0];
+		const aiAnimation* pAnimation = scene->mAnimations[0];
 
 		aiMatrix4x4 NodeTransformation(pNode->mTransformation);
 
@@ -272,7 +272,7 @@ public:
 		}
 
 		for (uint i = 0 ; i < pNode->mNumChildren ; i++) {
-			ReadNodeHeirarchy(AnimationTime, pNode->mChildren[i], GlobalTransformation, stopAnimLevel);
+			ReadNodeHeirarchy(scene, AnimationTime, pNode->mChildren[i], GlobalTransformation, stopAnimLevel);
 		}
 	} 
 
@@ -286,7 +286,7 @@ public:
 		float TimeInTicks = TimeInSeconds * TicksPerSecond;
 		float AnimationTime = fmod(TimeInTicks, _scenes[_curScene]->mAnimations[0]->mDuration);
 
-		ReadNodeHeirarchy(AnimationTime, _scenes[_curScene]->mRootNode, Identity, 2);
+		ReadNodeHeirarchy(_scenes[_curScene], AnimationTime, _scenes[_curScene]->mRootNode, Identity, 2);
 
 		Transforms.resize(m_NumBones);
 
