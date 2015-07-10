@@ -70,13 +70,13 @@ class AnimationController
 {
 private:
 
-	aiVector3D _rotation;
-
 	std::string m_ModelPath;
 
+	aiVector3D _rotation;
 	long long m_lastTime;
-	
 	float RunningTime;
+	float _blendingTime;
+	uint _prevAnimIndex;
 
 	// Create an instance of the Importer class
 	std::vector<Assimp::Importer *> _importers;
@@ -224,6 +224,8 @@ public:
 		, _curScene(NULL)
 		, m_ModelPath(modelpath)
 		, _rotation(0.f)
+		, _prevAnimIndex(-1)
+		, _blendingTime(0.f)
 	{}
 
 	void ReadNodeHeirarchy(const aiScene * scene, float AnimationTime, const aiNode* pNode, const aiMatrix4x4& ParentTransform, int stopAnimLevel)
@@ -713,7 +715,9 @@ public:
 
 	void SetAnimIndex(uint index)
 	{
+		_prevAnimIndex = _curScene;
 		_curScene = index;
+		_blendingTime = 0.3f;
 	}
 
 };
