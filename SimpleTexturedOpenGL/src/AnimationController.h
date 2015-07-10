@@ -278,14 +278,14 @@ public:
 		}
 	} 
 
-	void BoneTransform(float TimeInSeconds, std::vector<aiMatrix4x4>& Transforms)
+	void BoneTransform(std::vector<aiMatrix4x4>& Transforms)
 	{
 		aiMatrix4x4 Identity;
 		InitIdentityM4(Identity);
 
 		float TicksPerSecond = _scenes[_curScene]->mAnimations[0]->mTicksPerSecond != 0 ? 
 			_scenes[_curScene]->mAnimations[0]->mTicksPerSecond : 25.0f;
-		float TimeInTicks = TimeInSeconds * TicksPerSecond;
+		float TimeInTicks = RunningTime * TicksPerSecond;
 		float AnimationTime = fmod(TimeInTicks, _scenes[_curScene]->mAnimations[0]->mDuration);
 
 		ReadNodeHeirarchy(_scenes[_curScene], AnimationTime, _scenes[_curScene]->mRootNode, Identity, 2);
@@ -528,7 +528,7 @@ public:
 
 	int DrawGLScene()				//Here's where we do all the drawing
 	{		
-		BoneTransform(RunningTime, Transforms);
+		BoneTransform(Transforms);
 		m_VericiesOut.resize(m_Vericies.size());
 		m_NormalesOut.resize(m_Vericies.size());
 		aiMatrix4x4 m;
