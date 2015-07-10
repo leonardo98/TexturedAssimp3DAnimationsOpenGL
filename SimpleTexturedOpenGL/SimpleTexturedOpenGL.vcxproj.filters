@@ -18,9 +18,15 @@
     <ClCompile Include="src\model_loading.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\MathFunc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\AnimationController.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MathFunc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -111,10 +111,12 @@ copy ..\..\..\bin\assimp_release-dll_Win32\Assimp32.dll ..\..\bin
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\MathFunc.cpp" />
     <ClCompile Include="src\model_loading.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\AnimationController.h" />
+    <ClInclude Include="src\MathFunc.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -49,7 +49,6 @@ bool		fullscreen=TRUE;	// full-screen Flag Set To full-screen By Default
 
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);	// Declaration For WndProc
-GLboolean abortGLInit(const char*);
 
 const char* windowTitle = "OpenGL Framework";
 
@@ -62,40 +61,6 @@ GLfloat LightPosition[]= { 0.0f, 0.0f, 15.0f, 1.0f };
 // the global Assimp scene object
 GLuint scene_list = 0;
 aiVector3D scene_min, scene_max, scene_center;
-
-void createAILogger()
-{
-    // Change this line to normal if you not want to analyse the import process
-	//Assimp::Logger::LogSeverity severity = Assimp::Logger::NORMAL;
-	Assimp::Logger::LogSeverity severity = Assimp::Logger::VERBOSE;
-
-	// Create a logger instance for Console Output
-	Assimp::DefaultLogger::create("",severity, aiDefaultLogStream_STDOUT);
-
-	// Create a logger instance for File Output (found in project folder or near .exe)
-	Assimp::DefaultLogger::create("assimp_log.txt",severity, aiDefaultLogStream_FILE);
-
-	// Now I am ready for logging my stuff
-	Assimp::DefaultLogger::get()->info("this is my info-call");
-}
-
-void destroyAILogger()
-{
-	// Kill it after the work is done
-	Assimp::DefaultLogger::kill();
-}
-
-void logInfo(std::string logString)
-{
-	// Will add message to File with "info" Tag
-	Assimp::DefaultLogger::get()->info(logString.c_str());
-}
-
-void logDebug(const char* logString)
-{
-	// Will add message to File with "debug" Tag
-	Assimp::DefaultLogger::get()->debug(logString);
-}
 
 // Resize And Initialize The GL Window
 void ReSizeGLScene(GLsizei width, GLsizei height)				
@@ -199,13 +164,6 @@ void KillGLWindow()			// Properly Kill The Window
 		MessageBoxA(NULL, "Could Not Unregister Class.", "SHUTDOWN ERROR", MB_OK | MB_ICONINFORMATION);
 		hInstance = NULL;
 	}
-}
-
-GLboolean abortGLInit(const char* abortMessage)
-{
-	KillGLWindow();									// Reset Display
-	MessageBoxA(NULL, abortMessage, "ERROR", MB_OK|MB_ICONEXCLAMATION);
-	return FALSE;									// quit and return False
 }
 
 BOOL CreateGLWindow(const char* title, int width, int height, int bits, bool fullscreenflag)
