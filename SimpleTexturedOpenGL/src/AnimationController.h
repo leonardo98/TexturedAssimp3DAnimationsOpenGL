@@ -77,11 +77,11 @@ private:
 	long long m_startTime;
 
 	// Create an instance of the Importer class
-	Assimp::Importer importer;
+	std::vector<Assimp::Importer *> _importers;
 	
 	// вся сцена из файла храниться тут
 	std::vector<const aiScene*> _scenes;
-	const aiScene* _curScene;
+	uint _curScene;
 
 	// todo: узнать зачем это
 	aiMatrix4x4 m_GlobalInverseTransform;
@@ -209,6 +209,12 @@ public:
 			delete[] textureIds;
 			textureIds = NULL;
 		}
+
+		for (uint i = 0; i < _importers.size(); ++i)
+		{
+			delete _importers[i];
+		}
+		_importers.clear();
 	}
 
 	AnimationController(const char *modelpath) 
@@ -224,7 +230,7 @@ public:
 
 		std::string NodeName(pNode->mName.data);
 
-		const aiAnimation* pAnimation = _curScene->mAnimations[0];
+		const aiAnimation* pAnimation = _scenes[_curScene]->mAnimations[0];
 
 		aiMatrix4x4 NodeTransformation(pNode->mTransformation);
 
@@ -275,12 +281,12 @@ public:
 		aiMatrix4x4 Identity;
 		InitIdentityM4(Identity);
 
-		float TicksPerSecond = _curScene->mAnimations[0]->mTicksPerSecond != 0 ? 
-			_curScene->mAnimations[0]->mTicksPerSecond : 25.0f;
+		float TicksPerSecond = _scenes[_curScene]->mAnimations[0]->mTicksPerSecond != 0 ? 
+			_scenes[_curScene]->mAnimations[0]->mTicksPerSecond : 25.0f;
 		float TimeInTicks = TimeInSeconds * TicksPerSecond;
-		float AnimationTime = fmod(TimeInTicks, _curScene->mAnimations[0]->mDuration);
+		float AnimationTime = fmod(TimeInTicks, _scenes[_curScene]->mAnimations[0]->mDuration);
 
-		ReadNodeHeirarchy(AnimationTime, _curScene->mRootNode, Identity, 2);
+		ReadNodeHeirarchy(AnimationTime, _scenes[_curScene]->mRootNode, Identity, 2);
 
 		Transforms.resize(m_NumBones);
 
@@ -323,7 +329,6 @@ public:
 		m_startTime = -1;
 
 		m_Entries.resize(pScene->mNumMeshes);
-		//m_Textures.resize(pScene->mNumMaterials);
 
 		uint NumVertices = 0;
 		uint NumIndices = 0;
@@ -348,14 +353,17 @@ public:
 		for (uint i = 0; i < pScene->mNumMeshes; ++i)
 		{
 			LoadBones(i, pScene->mMeshes[i]);
-			for (uint j = 0; j < pScene->mMeshes[i]->mNumVertices; ++j)
+			if (pScene->mMeshes[i]->mTextureCoords[0])
 			{
-				m_Vericies[m_Entries[i].BaseVertex + j] = pScene->mMeshes[i]->mVertices[j];
-				m_Normales[m_Entries[i].BaseVertex + j] = pScene->mMeshes[i]->mNormals[j];
-				const aiVector3D &texCoord = pScene->mMeshes[i]->mTextureCoords[0][j];
-				aiVector2D &dst = m_TextureUVCoords[m_Entries[i].BaseVertex + j];
-				dst.x = texCoord.x;
-				dst.y = texCoord.y;
+				for (uint j = 0; j < pScene->mMeshes[i]->mNumVertices; ++j)
+				{
+					m_Vericies[m_Entries[i].BaseVertex + j] = pScene->mMeshes[i]->mVertices[j];
+					m_Normales[m_Entries[i].BaseVertex + j] = pScene->mMeshes[i]->mNormals[j];
+					const aiVector3D &texCoord = pScene->mMeshes[i]->mTextureCoords[0][j];
+					aiVector2D &dst = m_TextureUVCoords[m_Entries[i].BaseVertex + j];
+					dst.x = texCoord.x;
+					dst.y = texCoord.y;
+				}
 			}
 			// Populate the index buffer
 			for (uint j = 0 ; j < pScene->mMeshes[i]->mNumFaces ; j++) {
@@ -391,24 +399,25 @@ public:
 		else
 		{
 			MessageBoxA(NULL, ("Couldn't open file: " + m_ModelPath).c_str() , "ERROR", MB_OK | MB_ICONEXCLAMATION);
-			logInfo( importer.GetErrorString());
 			return false;
 		}
 
-		_curScene = importer.ReadFile( m_ModelPath, aiProcessPreset_TargetRealtime_Quality );
+		_curScene = _importers.size();
+		_importers.push_back(new Assimp::Importer);
+		_scenes.push_back(_importers[_curScene]->ReadFile( m_ModelPath, aiProcessPreset_TargetRealtime_Quality ));
 		//_curScene = importer.ReadFile( m_ModelPath, aiProcess_Triangulate | aiProcess_GenSmoothNormals );
 
 		bool ret = false;
 		// If the import failed, report it
-		if (_curScene) { 
-			m_GlobalInverseTransform = _curScene->mRootNode->mTransformation;
+		if (_scenes[_curScene]) { 
+			m_GlobalInverseTransform = _scenes[_curScene]->mRootNode->mTransformation;
 			m_GlobalInverseTransform.Inverse();
-			ret = InitFromScene(_curScene);
+			ret = InitFromScene(_scenes[_curScene]);
 			// Now we can access the file's contents.
 			logInfo("Import of _curScene " + m_ModelPath + " succeeded.");
 		}
 		 else {
-			logInfo( importer.GetErrorString());
+			 logInfo( _importers[_curScene]->GetErrorString());
 		 }
 
 		// We're done. Everything will be cleaned up by the importer destructor
@@ -433,7 +442,7 @@ public:
 		// draw all meshes assigned to this node
 		for (; n < nd->mNumMeshes; ++n)
 		{
-			const struct aiMesh* mesh = _curScene->mMeshes[nd->mMeshes[n]];
+			const struct aiMesh* mesh = sc->mMeshes[nd->mMeshes[n]];
 
 			apply_material(sc->mMaterials[mesh->mMaterialIndex]);
 
@@ -543,7 +552,7 @@ public:
 		logInfo("drawing objects");
 
 		//glScalef(5.0f, 5.0f, 5.0f);	// Move 40 Units And Into The Screen	
-		recursive_render(_curScene, _curScene->mRootNode, 25);
+		recursive_render(_scenes[0], _scenes[0]->mRootNode, 25);
 
 		return TRUE;					// okay
 	}
@@ -564,10 +573,10 @@ public:
 
 		ilInit(); /* Initialization of DevIL */
 
-		if (_curScene->HasTextures()) abortGLInit("Support for meshes with embedded textures is not implemented");
+		if (_scenes[_curScene]->HasTextures()) abortGLInit("Support for meshes with embedded textures is not implemented");
 
 		/* getTexture Filenames and Numb of Textures */
-		for (unsigned int m=0; m<_curScene->mNumMaterials; m++)
+		for (unsigned int m=0; m<_scenes[_curScene]->mNumMaterials; m++)
 		{
 			int texIndex = 0;
 			aiReturn texFound = AI_SUCCESS;
@@ -576,7 +585,7 @@ public:
 
 			while (texFound == AI_SUCCESS)
 			{
-				texFound = _curScene->mMaterials[m]->GetTexture(aiTextureType_DIFFUSE, texIndex, &path);
+				texFound = _scenes[_curScene]->mMaterials[m]->GetTexture(aiTextureType_DIFFUSE, texIndex, &path);
 				textureIdMap[path.data] = NULL; //fill map with textures, pointers still NULL yet
 				texIndex++;
 			}
@@ -669,7 +678,32 @@ public:
 
 	bool Add3DAnimFromFile(const std::string &fileName)
 	{
+		// Check if file exists
+		std::ifstream fin(fileName.c_str());
+		if(!fin.fail())
+		{
+			fin.close();
+		}
+		else
+		{
+			MessageBoxA(NULL, ("Couldn't open file: " + fileName).c_str() , "ERROR", MB_OK | MB_ICONEXCLAMATION);
+			return false;
+		}
+
+		_curScene = _importers.size();
+		_importers.push_back(new Assimp::Importer);
+		_scenes.push_back(_importers[_curScene]->ReadFile( fileName, aiProcessPreset_TargetRealtime_Quality ));
+		// If the import failed, report it
+		if (!_scenes[_curScene]) { 
+			logInfo( _importers[_curScene]->GetErrorString());
+			return false;
+		}
 		return true;
+	}
+
+	void SetAnimIndex(uint index)
+	{
+		_curScene = index;
 	}
 
 };

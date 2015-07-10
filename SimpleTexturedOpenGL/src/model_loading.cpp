@@ -92,6 +92,7 @@ int InitGL()
 	{
 		return FALSE;
 	}
+	if (!controller.Add3DAnimFromFile("C:/Dropbox/Projects/Moon/pers/idle.dae")) return 0;
 
 
 	glEnable(GL_TEXTURE_2D);
@@ -366,6 +367,14 @@ LRESULT CALLBACK WndProc(HWND hWnd,				// Handles for this Window
 		case WM_KEYDOWN:		// Is a key pressed?
 			{
 				keys[wParam] = TRUE;	// If so, Mark it as true
+				if (wParam == VK_NUMPAD1)
+				{
+					controller.SetAnimIndex(0);
+				}
+				else if (wParam == VK_NUMPAD2)
+				{
+					controller.SetAnimIndex(1);
+				}
 				return 0;
 			}
 
@@ -380,6 +389,7 @@ LRESULT CALLBACK WndProc(HWND hWnd,				// Handles for this Window
 				ReSizeGLScene(LOWORD(lParam), HIWORD(lParam));	// LoWord-Width, HiWord-Height
 				return 0;
 			}
+
 	}
 
 	// Pass All unhandled Messaged To DefWindowProc
@@ -408,7 +418,6 @@ int WINAPI WinMain( HINSTANCE hInstance,         // The instance
 	else
 	{
 		if (!controller.Import3DFromFile()) return 0;
-		if (!controller.Add3DAnimFromFile("C:/Dropbox/Projects/Moon/pers/idle.dae")) return 0;
 	}
 
 	logInfo("=============== Post Import ====================");
