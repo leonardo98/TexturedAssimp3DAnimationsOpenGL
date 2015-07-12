@@ -77,7 +77,10 @@ private:
 	float _animationTime0;
 	float _animationTime1;
 	float _blendingTime;
+	float _blendingTimeMul;
 	uint _prevAnimIndex;
+	bool _updateBoth;
+
 
 	// Create an instance of the Importer class
 	std::vector<Assimp::Importer *> _importers;
@@ -227,6 +230,8 @@ public:
 		, _rotation(0.f)
 		, _prevAnimIndex(-1)
 		, _blendingTime(0.f)
+		, _blendingTimeMul(1.f)
+		, _updateBoth(true)
 	{}
 
 	void ReadNodeHeirarchy(const aiScene * scene, float AnimationTime, const aiNode* pNode, const aiMatrix4x4& ParentTransform, int stopAnimLevel)
@@ -623,14 +628,21 @@ public:
 
 
 		_animationTime0 += dt;
-		_animationTime1 += dt;
 		if (_blendingTime > 0.f)
 		{
-			_blendingTime -= dt / 0.3f;
+			_blendingTime -= dt * _blendingTimeMul;
 			if (_blendingTime <= 0.f)
 			{
 				_animationTime0 = _animationTime1;
 			}
+			if (_updateBoth)
+			{
+				_animationTime1 += dt;
+			}
+		}
+		else
+		{
+			_animationTime1 += dt;
 		}
 	}
 
@@ -819,7 +831,7 @@ public:
 		return true;
 	}
 
-	void SetAnimIndex(uint index)
+	void SetAnimIndex(uint index, bool updateBoth = true, float blendDuration = 0.3f)
 	{
 		if (index == _curScene)
 		{
@@ -828,7 +840,25 @@ public:
 		_prevAnimIndex = _curScene;
 		_curScene = index;
 		_blendingTime = 1.f;
+		_blendingTimeMul = 1.f / blendDuration;
 		_animationTime1 = 0.f;
+		_updateBoth = updateBoth;
 	}
+	void SetAnimIndex(uint index, bool updateBoth = true, float blendDuration = 0.3f)
+	{
+		if (index == _curScene)
+		{
+			return;
+		}
+		_prevAnimIndex = _curScene;
+		_curScene = index;
+		_blendingTime = 1.f;
+		_blendingTimeMul = 1.f / blendDuration;
+		_animationTime1 = 0.f;
+		_updateBoth = updateBoth;
+	}
+
+
+	//void Set
 
 };

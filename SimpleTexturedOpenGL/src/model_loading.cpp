@@ -93,6 +93,7 @@ int InitGL()
 		return FALSE;
 	}
 	if (!controller.Add3DAnimFromFile("C:/Dropbox/Projects/Moon/pers/idle.dae")) return 0;
+	if (!controller.Add3DAnimFromFile("C:/Dropbox/Projects/Moon/pers/using0.dae")) return 0;
 
 
 	glEnable(GL_TEXTURE_2D);
@@ -373,7 +374,11 @@ LRESULT CALLBACK WndProc(HWND hWnd,				// Handles for this Window
 				}
 				else if (wParam == VK_NUMPAD2)
 				{
-					controller.SetAnimIndex(1);
+					controller.SetAnimIndex(1, false, 0.6f);
+				}
+				else if (wParam == VK_NUMPAD3)
+				{
+					controller.SetAnimIndex(2, true, 0.3f);
 				}
 				return 0;
 			}
