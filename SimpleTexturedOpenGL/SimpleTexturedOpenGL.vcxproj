@@ -19,7 +19,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <PlatformToolset>v110</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -51,7 +51,7 @@
     <OutDir>$(Configuration)\</OutDir>
     <IntDir>$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>C:\CppLib\zlib\lib;c:\users\lenya_en\documents\visual studio 2012\Projects\AssimpLibrary\Release;$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSDK_LibraryPath_x86);</LibraryPath>
+    <LibraryPath>C:\CppLib\zlib\lib;C:\Users\lenya_en\Documents\Visual Studio 2012\Projects\AssimpLibrary\Release;$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSDK_LibraryPath_x86)</LibraryPath>
     <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -86,7 +86,7 @@ copy ..\..\..\bin\assimp_debug-dll_Win32\Assimp32d.dll ..\..\bin
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>.\include;..\..\DevIL\include;..\..\..\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\lenya_en\Documents\GitHub\assimp_origin\include;C:\Users\lenya_en\Documents\GitHub\assimp_origin\samples\DevIL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -97,7 +97,7 @@ copy ..\..\..\bin\assimp_debug-dll_Win32\Assimp32d.dll ..\..\bin
     </ClCompile>
     <Link>
       <AdditionalDependencies>OpenGL32.lib;GLu32.lib;DevIL.lib;Assimp.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\DevIL\lib;  ..\..\..\lib\assimp_release-dll_win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\lenya_en\Documents\GitHub\assimp_origin\samples\DevIL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -111,10 +111,12 @@ copy ..\..\..\bin\assimp_release-dll_Win32\Assimp32.dll ..\..\bin
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\MathFunc.cpp" />
     <ClCompile Include="src\model_loading.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\AnimationController.h" />
+    <ClInclude Include="src\MathFunc.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

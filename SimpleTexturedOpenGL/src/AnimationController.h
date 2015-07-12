@@ -1,16 +1,15 @@
-#include <string>
+п»ї#include <string>
 #include <map>
 #include <vector>
 
 // assimp include files. These three are usually needed.
 #include "assimp/Importer.hpp"	//OO version Header!
 #include "assimp/postprocess.h"
-#include "assimp/scene.h"
-#include "assimp/DefaultLogger.hpp"
 #include "assimp/LogStream.hpp"
 
+#include "MathFunc.h"
+
 #define NUM_BONES_PER_VEREX 4
-typedef unsigned int uint;
 
 struct VertexBoneData
 {        
@@ -71,73 +70,60 @@ class AnimationController
 {
 private:
 
-	aiVector3D _rotation;
-
 	std::string m_ModelPath;
 
-	long long m_startTime;
+	aiVector3D _rotation;
+	long long m_lastTime;
+	float _animationTime0;
+	float _animationTime1;
+	float _blendingTime;
+	float _blendingTimeMul;
+	uint _prevAnimIndex;
+	bool _updateBoth;
+	bool _temporary;
+	float _playTime;
+
 
 	// Create an instance of the Importer class
-	Assimp::Importer importer;
+	std::vector<Assimp::Importer *> _importers;
 	
-	// вся сцена из файла храниться тут
-	const aiScene* scene;
+	// РІСЃСЏ СЃС†РµРЅР° РёР· С„Р°Р№Р»Р° С…СЂР°РЅРёС‚СЊСЃСЏ С‚СѓС‚
+	std::vector<const aiScene*> _scenes;
+	uint _curScene;
 
-	// todo: узнать зачем это
+	// todo: СѓР·РЅР°С‚СЊ Р·Р°С‡РµРј СЌС‚Рѕ
 	aiMatrix4x4 m_GlobalInverseTransform;
 
-	// соотношенеи имя кости и ее порядкового номера в m_BoneInfo
+	// СЃРѕРѕС‚РЅРѕС€РµРЅРµРё РёРјСЏ РєРѕСЃС‚Рё Рё РµРµ РїРѕСЂСЏРґРєРѕРІРѕРіРѕ РЅРѕРјРµСЂР° РІ m_BoneInfo
 	std::map<std::string, uint> m_BoneMapping; 
 
 	// images / texture
 	std::map<std::string, GLuint*> textureIdMap;	// map image filenames to textureIds
 	GLuint*		textureIds;							// pointer to texture Array
 
-	// Используется на этапе инициализации
-	// todo: избавится от этого , переделать на временную переменную чтобы не захламлять код
+	// РСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РЅР° СЌС‚Р°РїРµ РёРЅРёС†РёР°Р»РёР·Р°С†РёРё
+	// todo: РёР·Р±Р°РІРёС‚СЃСЏ РѕС‚ СЌС‚РѕРіРѕ , РїРµСЂРµРґРµР»Р°С‚СЊ РЅР° РІСЂРµРјРµРЅРЅСѓСЋ РїРµСЂРµРјРµРЅРЅСѓСЋ С‡С‚РѕР±С‹ РЅРµ Р·Р°С…Р»Р°РјР»СЏС‚СЊ РєРѕРґ
 	std::vector<MeshEntry> m_Entries;
 
-	// исходное и финальное(для кадра) при анимации положение кости
+	// РёСЃС…РѕРґРЅРѕРµ Рё С„РёРЅР°Р»СЊРЅРѕРµ(РґР»СЏ РєР°РґСЂР°) РїСЂРё Р°РЅРёРјР°С†РёРё РїРѕР»РѕР¶РµРЅРёРµ РєРѕСЃС‚Рё
 	std::vector<BoneInfo> m_BoneInfo;
 
 	uint m_NumBones;
 
-	// todo: узнать зачем это
+	// todo: СѓР·РЅР°С‚СЊ Р·Р°С‡РµРј СЌС‚Рѕ
 	std::vector<aiMatrix4x4> Transforms;
 
-	// вся информация о сетке модели
+	// РІСЃСЏ РёРЅС„РѕСЂРјР°С†РёСЏ Рѕ СЃРµС‚РєРµ РјРѕРґРµР»Рё
 	std::vector<aiVector3D> m_Vericies;
 	std::vector<VertexBoneData> m_Mass;
 	std::vector<aiVector3D> m_Normales;
 	std::vector<aiVector2D> m_TextureUVCoords;
 	std::vector<uint> m_Indexes;
 
-	// вершины и нормали меняются при анмиации 
-	// изменения между Update и Render храним тут
+	// РІРµСЂС€РёРЅС‹ Рё РЅРѕСЂРјР°Р»Рё РјРµРЅСЏСЋС‚СЃСЏ РїСЂРё Р°РЅРјРёР°С†РёРё 
+	// РёР·РјРµРЅРµРЅРёСЏ РјРµР¶РґСѓ Update Рё Render С…СЂР°РЅРёРј С‚СѓС‚
 	std::vector<aiVector3D> m_VericiesOut;
 	std::vector<aiVector3D> m_NormalesOut;
-
-	// Can't send color down as a pointer to aiColor4D because AI colors are ABGR.
-	void Color4f(const aiColor4D *color)
-	{
-		glColor4f(color->r, color->g, color->b, color->a);
-	}
-
-	void set_float4(float f[4], float a, float b, float c, float d)
-	{
-		f[0] = a;
-		f[1] = b;
-		f[2] = c;
-		f[3] = d;
-	}
-
-	void color4_to_float4(const aiColor4D *c, float f[4])
-	{
-		f[0] = c->r;
-		f[1] = c->g;
-		f[2] = c->b;
-		f[3] = c->a;
-	}
 
 	void apply_material(const aiMaterial *mtl)
 	{
@@ -210,7 +196,6 @@ private:
 			glDisable(GL_CULL_FACE);
 	}
 
-
 public:
 
 	void SetRotation(const aiVector3D &r) { _rotation = r; }
@@ -232,136 +217,28 @@ public:
 			delete[] textureIds;
 			textureIds = NULL;
 		}
+
+		for (uint i = 0; i < _importers.size(); ++i)
+		{
+			delete _importers[i];
+		}
+		_importers.clear();
 	}
 
 	AnimationController(const char *modelpath) 
 		: m_NumBones(0)
-		, scene(NULL)
+		, _curScene(NULL)
 		, m_ModelPath(modelpath)
 		, _rotation(0.f)
+		, _prevAnimIndex(-1)
+		, _blendingTime(0.f)
+		, _blendingTimeMul(1.f)
+		, _updateBoth(true)
+		, _temporary(false)
+		, _playTime(0.f)
 	{}
 
-	uint FindRotation(float AnimationTime, const aiNodeAnim* pNodeAnim)
-	{
-		assert(pNodeAnim->mNumRotationKeys > 0);
-
-		for (uint i = 0 ; i < pNodeAnim->mNumRotationKeys - 1 ; i++) {
-			if (AnimationTime < (float)pNodeAnim->mRotationKeys[i + 1].mTime) {
-				return i;
-			}
-		}
-
-		assert(0);
-		return 0xFFFFFFFF;
-	} 
-
-	void CalcInterpolatedRotation(aiQuaternion& Out, float AnimationTime, const aiNodeAnim* pNodeAnim)
-	{
-		// we need at least two values to interpolate...
-		if (pNodeAnim->mNumRotationKeys == 1) {
-			Out = pNodeAnim->mRotationKeys[0].mValue;
-			return;
-		}
-
-		uint RotationIndex = FindRotation(AnimationTime, pNodeAnim);
-		uint NextRotationIndex = (RotationIndex + 1);
-		assert(NextRotationIndex < pNodeAnim->mNumRotationKeys);
-		float DeltaTime = pNodeAnim->mRotationKeys[NextRotationIndex].mTime - pNodeAnim->mRotationKeys[RotationIndex].mTime;
-		float Factor = (AnimationTime - (float)pNodeAnim->mRotationKeys[RotationIndex].mTime) / DeltaTime;
-		assert(Factor >= 0.0f && Factor <= 1.0f);
-		const aiQuaternion& StartRotationQ = pNodeAnim->mRotationKeys[RotationIndex].mValue;
-		const aiQuaternion& EndRotationQ = pNodeAnim->mRotationKeys[NextRotationIndex].mValue;
-		aiQuaternion::Interpolate(Out, StartRotationQ, EndRotationQ, Factor);
-		Out = Out.Normalize();
-	} 
-
-	uint FindScaling(float AnimationTime, const aiNodeAnim* pNodeAnim)
-	{
-		assert(pNodeAnim->mNumScalingKeys > 0);
-
-		for (uint i = 0 ; i < pNodeAnim->mNumScalingKeys - 1 ; i++) {
-			if (AnimationTime < (float)pNodeAnim->mScalingKeys[i + 1].mTime) {
-				return i;
-			}
-		}
-
-		assert(0);
-		return 0xFFFFFFFF;
-	} 
-
-	void CalcInterpolatedScaling(aiVector3D& Out, float AnimationTime, const aiNodeAnim* pNodeAnim)
-	{
-		// we need at least two values to interpolate...
-		if (pNodeAnim->mNumScalingKeys == 1) {
-			Out = pNodeAnim->mScalingKeys[0].mValue;
-			return;
-		}
-
-		uint ScalingIndex = FindScaling(AnimationTime, pNodeAnim);
-		uint NextScalingIndex = (ScalingIndex + 1);
-		assert(NextScalingIndex < pNodeAnim->mNumScalingKeys);
-		float DeltaTime = pNodeAnim->mScalingKeys[NextScalingIndex].mTime - pNodeAnim->mScalingKeys[ScalingIndex].mTime;
-		float Factor = (AnimationTime - (float)pNodeAnim->mScalingKeys[ScalingIndex].mTime) / DeltaTime;
-		assert(Factor >= 0.0f && Factor <= 1.0f);
-		const aiVector3D& StartScaling = pNodeAnim->mScalingKeys[ScalingIndex].mValue;
-		const aiVector3D& EndScaling = pNodeAnim->mScalingKeys[NextScalingIndex].mValue;
-		Out = StartScaling * (1 - Factor) + EndScaling * Factor;
-	} 
-
-	uint FindPosition(float AnimationTime, const aiNodeAnim* pNodeAnim)
-	{
-		assert(pNodeAnim->mNumPositionKeys > 0);
-
-		for (uint i = 0 ; i < pNodeAnim->mNumPositionKeys - 1 ; i++) {
-			if (AnimationTime < (float)pNodeAnim->mPositionKeys[i + 1].mTime) {
-				return i;
-			}
-		}
-
-		assert(0);
-		return 0xFFFFFFFF;
-	} 
-
-	void CalcInterpolatedPosition(aiVector3D& Out, float AnimationTime, const aiNodeAnim* pNodeAnim)
-	{
-		// we need at least two values to interpolate...
-		if (pNodeAnim->mNumPositionKeys == 1) {
-			Out = pNodeAnim->mPositionKeys[0].mValue;
-			return;
-		}
-
-		uint PositionIndex = FindPosition(AnimationTime, pNodeAnim);
-		uint NextPositionIndex = (PositionIndex + 1);
-		assert(NextPositionIndex < pNodeAnim->mNumPositionKeys);
-		float DeltaTime = pNodeAnim->mPositionKeys[NextPositionIndex].mTime - pNodeAnim->mPositionKeys[PositionIndex].mTime;
-		float Factor = (AnimationTime - (float)pNodeAnim->mPositionKeys[PositionIndex].mTime) / DeltaTime;
-		assert(Factor >= 0.0f && Factor <= 1.0f);
-		const aiVector3D& StartPosition = pNodeAnim->mPositionKeys[PositionIndex].mValue;
-		const aiVector3D& EndPosition = pNodeAnim->mPositionKeys[NextPositionIndex].mValue;
-		Out = StartPosition * (1 - Factor) + EndPosition * Factor;
-	} 
-
-	const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnimation, const std::string &nodeName)
-	{
-		for (uint i = 0; i < pAnimation->mNumChannels; ++i)
-		{
-			if (strcmp(pAnimation->mChannels[i]->mNodeName.C_Str(), nodeName.c_str()) == 0)
-			{
-				return pAnimation->mChannels[i];
-			}
-		}
-		return NULL;
-	}
-
-	void InitM4FromM3(aiMatrix4x4& out, const aiMatrix3x3& in)
-	{
-		out.a1 = in.a1; out.a2 = in.a2; out.a3 = in.a3; out.a4 = 0.f;
-		out.b1 = in.b1; out.b2 = in.b2; out.b3 = in.b3; out.b4 = 0.f;
-		out.c1 = in.c1; out.c2 = in.c2; out.c3 = in.c3; out.c4 = 0.f;
-		out.d1 = 0.f;   out.d2 = 0.f;   out.d3 = 0.f;   out.d4 = 1.f;
-	}
-
-	void ReadNodeHeirarchy(float AnimationTime, const aiNode* pNode, const aiMatrix4x4& ParentTransform, int stopAnimLevel)
+	void ReadNodeHeirarchy(const aiScene * scene, float AnimationTime, const aiNode* pNode, const aiMatrix4x4& ParentTransform, int stopAnimLevel)
 	{ 
 		float time(AnimationTime);
 
@@ -409,30 +286,115 @@ public:
 		}
 
 		for (uint i = 0 ; i < pNode->mNumChildren ; i++) {
-			ReadNodeHeirarchy(AnimationTime, pNode->mChildren[i], GlobalTransformation, stopAnimLevel);
+			ReadNodeHeirarchy(scene, AnimationTime, pNode->mChildren[i], GlobalTransformation, stopAnimLevel);
 		}
 	} 
 
-	void InitIdentity(aiMatrix4x4 &m)
-	{
-		m.a1 = 1.f; m.a2 = 0.f; m.a3 = 0.f; m.a4 = 0.f;
-		m.b1 = 0.f; m.b2 = 1.f; m.b3 = 0.f; m.b4 = 0.f;
-		m.c1 = 0.f; m.c2 = 0.f; m.c3 = 1.f; m.c4 = 0.f;
-		m.d1 = 0.f; m.d2 = 0.f; m.d3 = 0.f; m.d4 = 1.f;
-		assert(m.IsIdentity());
-	}
+	void ReadNodeHeirarchy(const aiScene * scene0, const aiScene * scene1
+							, float AnimationTime0, float AnimationTime1
+							, const aiNode* pNode0, const aiNode* pNode1
+							, const aiMatrix4x4& ParentTransform, int stopAnimLevel)
+	{ 
+		float time0(AnimationTime0);
+		float time1(AnimationTime1);
 
-	void BoneTransform(float TimeInSeconds, std::vector<aiMatrix4x4>& Transforms)
+		std::string NodeName0(pNode0->mName.data);
+		std::string NodeName1(pNode1->mName.data);
+		assert(NodeName0 == NodeName1);
+
+		const aiAnimation* pAnimation0 = scene0->mAnimations[0];
+		const aiAnimation* pAnimation1 = scene1->mAnimations[0];
+
+		aiMatrix4x4 NodeTransformation0(pNode0->mTransformation);
+		aiMatrix4x4 NodeTransformation1(pNode1->mTransformation);
+
+		const aiNodeAnim* pNodeAnim0 = FindNodeAnim(pAnimation0, NodeName0);
+		const aiNodeAnim* pNodeAnim1 = FindNodeAnim(pAnimation1, NodeName0);
+
+		if (pNodeAnim0 && pNodeAnim1) {
+			// Interpolate scaling and generate scaling transformation matrix
+			aiVector3D Scaling0;
+			CalcInterpolatedScaling(Scaling0, time0, pNodeAnim0);
+			aiVector3D Scaling1;
+			CalcInterpolatedScaling(Scaling1, time1, pNodeAnim1);
+			aiMatrix4x4 ScalingM;
+			aiMatrix4x4::Scaling(Scaling0 * _blendingTime + Scaling1 * (1.f - _blendingTime), ScalingM);
+
+			// Interpolate rotation and generate rotation transformation matrix
+			aiQuaternion RotationQ0;
+			CalcInterpolatedRotation(RotationQ0, time0, pNodeAnim0); 
+			aiQuaternion RotationQ1;
+			CalcInterpolatedRotation(RotationQ1, time1, pNodeAnim1); 
+			aiMatrix4x4 RotationM;
+			aiQuaternion RotationQ;
+			aiQuaternion::Interpolate(RotationQ, RotationQ1, RotationQ0, _blendingTime);
+			InitM4FromM3(RotationM, RotationQ.GetMatrix());
+
+			// Interpolate translation and generate translation transformation matrix
+			aiVector3D Translation0;
+			{
+				float time(stopAnimLevel <= 0 ? AnimationTime0 : 0.f);
+				CalcInterpolatedPosition(Translation0, time, pNodeAnim0);
+			}
+			aiVector3D Translation1;
+			{
+				float time(stopAnimLevel <= 0 ? AnimationTime1 : 0.f);
+				CalcInterpolatedPosition(Translation1, time, pNodeAnim1);
+			}
+			aiMatrix4x4 TranslationM;
+			aiMatrix4x4::Translation(Translation0 * _blendingTime + Translation1 * (1.f - _blendingTime), TranslationM);
+
+			// Combine the above transformations
+			NodeTransformation0 = TranslationM * RotationM * ScalingM;
+		}
+
+		stopAnimLevel--;
+
+		aiMatrix4x4 GlobalTransformation = ParentTransform * NodeTransformation0;
+
+		if (m_BoneMapping.find(NodeName0) != m_BoneMapping.end()) {
+			uint BoneIndex = m_BoneMapping[NodeName0];
+			m_BoneInfo[BoneIndex].FinalTransformation = m_GlobalInverseTransform * GlobalTransformation * 
+				m_BoneInfo[BoneIndex].BoneOffset;
+		}
+
+		uint n = min(pNode0->mNumChildren, pNode1->mNumChildren);
+		for (uint i = 0 ; i < n ; i++) {
+			ReadNodeHeirarchy(scene0, scene1, AnimationTime0, AnimationTime1, pNode0->mChildren[i], pNode1->mChildren[i], GlobalTransformation, stopAnimLevel);
+		}
+	} 
+
+	void BoneTransform(std::vector<aiMatrix4x4>& Transforms)
 	{
 		aiMatrix4x4 Identity;
-		InitIdentity(Identity);
+		InitIdentityM4(Identity);
 
-		float TicksPerSecond = scene->mAnimations[0]->mTicksPerSecond != 0 ? 
-			scene->mAnimations[0]->mTicksPerSecond : 25.0f;
-		float TimeInTicks = TimeInSeconds * TicksPerSecond;
-		float AnimationTime = fmod(TimeInTicks, scene->mAnimations[0]->mDuration);
+		if (_blendingTime > 0.f)
+		{
+			float TicksPerSecond = _scenes[_prevAnimIndex]->mAnimations[0]->mTicksPerSecond != 0 ? 
+				_scenes[_prevAnimIndex]->mAnimations[0]->mTicksPerSecond : 25.0f;
+			float TimeInTicks = _animationTime0 * TicksPerSecond;
+			float AnimationTime0 = fmod(TimeInTicks, _scenes[_prevAnimIndex]->mAnimations[0]->mDuration);
 
-		ReadNodeHeirarchy(AnimationTime, scene->mRootNode, Identity, 2);
+			TicksPerSecond = _scenes[_curScene]->mAnimations[0]->mTicksPerSecond != 0 ? 
+				_scenes[_curScene]->mAnimations[0]->mTicksPerSecond : 25.0f;
+			TimeInTicks = _animationTime1 * TicksPerSecond;
+			float AnimationTime1 = fmod(TimeInTicks, _scenes[_curScene]->mAnimations[0]->mDuration);
+
+			ReadNodeHeirarchy(_scenes[_prevAnimIndex], _scenes[_curScene]
+										, AnimationTime0, AnimationTime1
+										, _scenes[_prevAnimIndex]->mRootNode, _scenes[_curScene]->mRootNode
+										, Identity, 2);
+		}
+		else
+		{
+			float TicksPerSecond = _scenes[_curScene]->mAnimations[0]->mTicksPerSecond != 0 ? 
+				_scenes[_curScene]->mAnimations[0]->mTicksPerSecond : 25.0f;
+			float TimeInTicks = _animationTime0 * TicksPerSecond;
+			float AnimationTime = fmod(TimeInTicks, _scenes[_curScene]->mAnimations[0]->mDuration);
+
+			ReadNodeHeirarchy(_scenes[_curScene], AnimationTime, _scenes[_curScene]->mRootNode, Identity, 2);
+		}
 
 		Transforms.resize(m_NumBones);
 
@@ -470,12 +432,12 @@ public:
 		Transforms.resize(m_NumBones);
 	} 
 
-	bool InitFromScene(const aiScene* pScene, const std::string& Filename)
+	bool InitFromScene(const aiScene* pScene)
 	{ 
-		m_startTime = -1;
+		m_lastTime = -1;
+		_animationTime0 = 0.f;
 
 		m_Entries.resize(pScene->mNumMeshes);
-		//m_Textures.resize(pScene->mNumMaterials);
 
 		uint NumVertices = 0;
 		uint NumIndices = 0;
@@ -500,14 +462,17 @@ public:
 		for (uint i = 0; i < pScene->mNumMeshes; ++i)
 		{
 			LoadBones(i, pScene->mMeshes[i]);
-			for (uint j = 0; j < pScene->mMeshes[i]->mNumVertices; ++j)
+			if (pScene->mMeshes[i]->mTextureCoords[0])
 			{
-				m_Vericies[m_Entries[i].BaseVertex + j] = pScene->mMeshes[i]->mVertices[j];
-				m_Normales[m_Entries[i].BaseVertex + j] = pScene->mMeshes[i]->mNormals[j];
-				const aiVector3D &texCoord = pScene->mMeshes[i]->mTextureCoords[0][j];
-				aiVector2D &dst = m_TextureUVCoords[m_Entries[i].BaseVertex + j];
-				dst.x = texCoord.x;
-				dst.y = texCoord.y;
+				for (uint j = 0; j < pScene->mMeshes[i]->mNumVertices; ++j)
+				{
+					m_Vericies[m_Entries[i].BaseVertex + j] = pScene->mMeshes[i]->mVertices[j];
+					m_Normales[m_Entries[i].BaseVertex + j] = pScene->mMeshes[i]->mNormals[j];
+					const aiVector3D &texCoord = pScene->mMeshes[i]->mTextureCoords[0][j];
+					aiVector2D &dst = m_TextureUVCoords[m_Entries[i].BaseVertex + j];
+					dst.x = texCoord.x;
+					dst.y = texCoord.y;
+				}
 			}
 			// Populate the index buffer
 			for (uint j = 0 ; j < pScene->mMeshes[i]->mNumFaces ; j++) {
@@ -543,24 +508,25 @@ public:
 		else
 		{
 			MessageBoxA(NULL, ("Couldn't open file: " + m_ModelPath).c_str() , "ERROR", MB_OK | MB_ICONEXCLAMATION);
-			logInfo( importer.GetErrorString());
 			return false;
 		}
 
-		scene = importer.ReadFile( m_ModelPath, aiProcessPreset_TargetRealtime_Quality );
-		//scene = importer.ReadFile( m_ModelPath, aiProcess_Triangulate | aiProcess_GenSmoothNormals );
+		_curScene = _importers.size();
+		_importers.push_back(new Assimp::Importer);
+		_scenes.push_back(_importers[_curScene]->ReadFile( m_ModelPath, aiProcessPreset_TargetRealtime_Quality ));
+		//_curScene = importer.ReadFile( m_ModelPath, aiProcess_Triangulate | aiProcess_GenSmoothNormals );
 
 		bool ret = false;
 		// If the import failed, report it
-		if (scene) { 
-			m_GlobalInverseTransform = scene->mRootNode->mTransformation;
+		if (_scenes[_curScene]) { 
+			m_GlobalInverseTransform = _scenes[_curScene]->mRootNode->mTransformation;
 			m_GlobalInverseTransform.Inverse();
-			ret = InitFromScene(scene, m_ModelPath);
+			ret = InitFromScene(_scenes[_curScene]);
 			// Now we can access the file's contents.
-			logInfo("Import of scene " + m_ModelPath + " succeeded.");
+			logInfo("Import of _curScene " + m_ModelPath + " succeeded.");
 		}
 		 else {
-			logInfo( importer.GetErrorString());
+			 logInfo( _importers[_curScene]->GetErrorString());
 		 }
 
 		// We're done. Everything will be cleaned up by the importer destructor
@@ -585,7 +551,7 @@ public:
 		// draw all meshes assigned to this node
 		for (; n < nd->mNumMeshes; ++n)
 		{
-			const struct aiMesh* mesh = scene->mMeshes[nd->mMeshes[n]];
+			const struct aiMesh* mesh = sc->mMeshes[nd->mMeshes[n]];
 
 			apply_material(sc->mMaterials[mesh->mMaterialIndex]);
 
@@ -654,43 +620,49 @@ public:
 		glPopMatrix();
 	}
 
-	void Mul(aiMatrix4x4 &out, aiMatrix4x4 &in, float m)
+	void Update(/*float dt*/)
 	{
-		out.a1 += in.a1 * m; out.a2 += in.a2 * m; out.a3 += in.a3 * m; out.a4 += in.a4 * m;
-		out.b1 += in.b1 * m; out.b2 += in.b2 * m; out.b3 += in.b3 * m; out.b4 += in.b4 * m;
-		out.c1 += in.c1 * m; out.c2 += in.c2 * m; out.c3 += in.c3 * m; out.c4 += in.c4 * m;
-		out.d1 += in.d1 * m; out.d2 += in.d2 * m; out.d3 += in.d3 * m; out.d4 += in.d4 * m;
+		if (m_lastTime == -1)
+		{
+			m_lastTime = GetCurrentTimeMillis();
+		}
+		long long newTime = GetCurrentTimeMillis();
+		float dt = (float)((double)newTime - (double)m_lastTime) / 1000.0f;
+		m_lastTime = newTime;
+
+
+		_animationTime0 += dt;
+		if (_blendingTime > 0.f)
+		{
+			_blendingTime -= dt * _blendingTimeMul;
+			if (_blendingTime <= 0.f)
+			{
+				_animationTime0 = _animationTime1;
+			}
+			if (_updateBoth)
+			{
+				_animationTime1 += dt;
+			}
+		}
+		else
+		{
+			_animationTime1 += dt;
+		}
+
+		if (_temporary)
+		{
+			_playTime -= dt;
+			if (_playTime <= 0.f)
+			{
+				_temporary = false;
+				SetAnimIndex(_prevAnimIndex);
+			}
+		}
 	}
-
-	void ShortMul(aiVector3D &out, const aiMatrix4x4 &m, const aiVector3D &in)
-	{
-		out.x = m.a1 * in.x + m.a2 * in.y + m.a3 * in.z;
-		out.y = m.b1 * in.x + m.b2 * in.y + m.b3 * in.z;
-		out.z = m.c1 * in.x + m.c2 * in.y + m.c3 * in.z;
-	}
-
-	long long GetCurrentTimeMillis()
-	{
-	#ifdef WIN32    
-		return GetTickCount();
-	#else
-		timeval t;
-		gettimeofday(&t, NULL);
-
-		long long ret = t.tv_sec * 1000 + t.tv_usec / 1000;
-		return ret;
-	#endif    
-	}
-
 
 	int DrawGLScene()				//Here's where we do all the drawing
-	{
-		if (m_startTime == -1)
-		{
-			m_startTime = GetCurrentTimeMillis();
-		}
-		float RunningTime = (float)((double)GetCurrentTimeMillis() - (double)m_startTime) / 1000.0f;
-		BoneTransform(RunningTime, Transforms);
+	{		
+		BoneTransform(Transforms);
 		m_VericiesOut.resize(m_Vericies.size());
 		m_NormalesOut.resize(m_Vericies.size());
 		aiMatrix4x4 m;
@@ -702,12 +674,12 @@ public:
 			m.d1 = m.d2 = m.d3 = m.d4 = 0.f;
 			for (int b = 0; b < NUM_BONES_PER_VEREX; ++b)
 			{
-				if (m_Mass[i].Weights[b] > 0) Mul(m, Transforms[m_Mass[i].IDs[b]], m_Mass[i].Weights[b]);
+				if (m_Mass[i].Weights[b] > 0) MulM4(m, Transforms[m_Mass[i].IDs[b]], m_Mass[i].Weights[b]);
 			}
 
 			m_VericiesOut[i] = m * m_Vericies[i];
 
-			ShortMul(m_NormalesOut[i], m, m_Normales[i]);
+			ShortMulM4(m_NormalesOut[i], m, m_Normales[i]);
 
 		}
 
@@ -724,15 +696,9 @@ public:
 		logInfo("drawing objects");
 
 		//glScalef(5.0f, 5.0f, 5.0f);	// Move 40 Units And Into The Screen	
-		recursive_render(scene, scene->mRootNode, 25);
+		recursive_render(_scenes[0], _scenes[0]->mRootNode, 25);
 
 		return TRUE;					// okay
-	}
-
-	std::string getBasePath(const std::string& path)
-	{
-		size_t pos = path.find_last_of("\\/");
-		return (std::string::npos == pos) ? "" : path.substr(0, pos + 1);
 	}
 
 	int LoadGLTextures()
@@ -751,10 +717,10 @@ public:
 
 		ilInit(); /* Initialization of DevIL */
 
-		if (scene->HasTextures()) abortGLInit("Support for meshes with embedded textures is not implemented");
+		if (_scenes[_curScene]->HasTextures()) abortGLInit("Support for meshes with embedded textures is not implemented");
 
 		/* getTexture Filenames and Numb of Textures */
-		for (unsigned int m=0; m<scene->mNumMaterials; m++)
+		for (unsigned int m=0; m<_scenes[_curScene]->mNumMaterials; m++)
 		{
 			int texIndex = 0;
 			aiReturn texFound = AI_SUCCESS;
@@ -763,7 +729,7 @@ public:
 
 			while (texFound == AI_SUCCESS)
 			{
-				texFound = scene->mMaterials[m]->GetTexture(aiTextureType_DIFFUSE, texIndex, &path);
+				texFound = _scenes[_curScene]->mMaterials[m]->GetTexture(aiTextureType_DIFFUSE, texIndex, &path);
 				textureIdMap[path.data] = NULL; //fill map with textures, pointers still NULL yet
 				texIndex++;
 			}
@@ -854,17 +820,46 @@ public:
 		return TRUE;
 	}
 
-	GLboolean abortGLInit(const char* abortMessage)
+	bool Add3DAnimFromFile(const std::string &fileName)
 	{
-		MessageBoxA(NULL, abortMessage, "ERROR", MB_OK|MB_ICONEXCLAMATION);
-		exit(-61);									// quit and return False
+		// Check if file exists
+		std::ifstream fin(fileName.c_str());
+		if(!fin.fail())
+		{
+			fin.close();
+		}
+		else
+		{
+			MessageBoxA(NULL, ("Couldn't open file: " + fileName).c_str() , "ERROR", MB_OK | MB_ICONEXCLAMATION);
+			return false;
+		}
+
+		_curScene = _importers.size();
+		_importers.push_back(new Assimp::Importer);
+		_scenes.push_back(_importers[_curScene]->ReadFile( fileName, aiProcessPreset_TargetRealtime_Quality ));
+		// If the import failed, report it
+		if (!_scenes[_curScene]) { 
+			logInfo( _importers[_curScene]->GetErrorString());
+			return false;
+		}
+		return true;
 	}
 
-	void logInfo(std::string logString)
+	bool SetAnimIndex(uint index, bool updateBoth = true, float blendDuration = 0.3f, bool temporary = false, float time = 0.f)
 	{
-		// Will add message to File with "info" Tag
-		Assimp::DefaultLogger::get()->info(logString.c_str());
+		if (index == _curScene || index >= _scenes.size())
+		{
+			return false;
+		}
+		_prevAnimIndex = _curScene;
+		_curScene = index;
+		_blendingTime = 1.f;
+		_blendingTimeMul = 1.f / blendDuration;
+		_animationTime1 = 0.f;
+		_updateBoth = updateBoth;
+		_temporary = temporary;
+		_playTime = time;
+		return true;
 	}
-
 
 };
