@@ -80,6 +80,8 @@ private:
 	float _blendingTimeMul;
 	uint _prevAnimIndex;
 	bool _updateBoth;
+	bool _temporary;
+	float _playTime;
 
 
 	// Create an instance of the Importer class
@@ -232,6 +234,8 @@ public:
 		, _blendingTime(0.f)
 		, _blendingTimeMul(1.f)
 		, _updateBoth(true)
+		, _temporary(false)
+		, _playTime(0.f)
 	{}
 
 	void ReadNodeHeirarchy(const aiScene * scene, float AnimationTime, const aiNode* pNode, const aiMatrix4x4& ParentTransform, int stopAnimLevel)
@@ -644,6 +648,16 @@ public:
 		{
 			_animationTime1 += dt;
 		}
+
+		if (_temporary)
+		{
+			_playTime -= dt;
+			if (_playTime <= 0.f)
+			{
+				_temporary = false;
+				SetAnimIndex(_prevAnimIndex);
+			}
+		}
 	}
 
 	int DrawGLScene()				//Here's where we do all the drawing
@@ -831,11 +845,11 @@ public:
 		return true;
 	}
 
-	void SetAnimIndex(uint index, bool updateBoth = true, float blendDuration = 0.3f)
+	bool SetAnimIndex(uint index, bool updateBoth = true, float blendDuration = 0.3f, bool temporary = false, float time = 0.f)
 	{
-		if (index == _curScene)
+		if (index == _curScene || index >= _scenes.size())
 		{
-			return;
+			return false;
 		}
 		_prevAnimIndex = _curScene;
 		_curScene = index;
@@ -843,22 +857,9 @@ public:
 		_blendingTimeMul = 1.f / blendDuration;
 		_animationTime1 = 0.f;
 		_updateBoth = updateBoth;
+		_temporary = temporary;
+		_playTime = time;
+		return true;
 	}
-	void SetAnimIndex(uint index, bool updateBoth = true, float blendDuration = 0.3f)
-	{
-		if (index == _curScene)
-		{
-			return;
-		}
-		_prevAnimIndex = _curScene;
-		_curScene = index;
-		_blendingTime = 1.f;
-		_blendingTimeMul = 1.f / blendDuration;
-		_animationTime1 = 0.f;
-		_updateBoth = updateBoth;
-	}
-
-
-	//void Set
 
 };

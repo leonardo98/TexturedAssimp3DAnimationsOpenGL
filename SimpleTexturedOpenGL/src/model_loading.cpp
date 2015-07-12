@@ -378,7 +378,7 @@ LRESULT CALLBACK WndProc(HWND hWnd,				// Handles for this Window
 				}
 				else if (wParam == VK_NUMPAD3)
 				{
-					controller.SetAnimIndex(2, true, 0.3f);
+					controller.SetAnimIndex(2, true, 0.3f, true, 3.f);
 				}
 				return 0;
 			}
