@@ -6,6 +6,7 @@
 #include "assimp/Importer.hpp"	//OO version Header!
 #include "assimp/postprocess.h"
 #include "assimp/LogStream.hpp"
+#include <IL/il.h>
 
 #include "MathFunc.h"
 
@@ -860,6 +861,11 @@ public:
 		_temporary = temporary;
 		_playTime = time;
 		return true;
+	}
+
+	uint GetMaxIndex()
+	{
+		return _scenes.size();
 	}
 
 };
