@@ -51,7 +51,7 @@
     <OutDir>$(Configuration)\</OutDir>
     <IntDir>$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>C:\CppLib\zlib\lib;C:\Users\lenya_en\Documents\Visual Studio 2012\Projects\AssimpLibrary\Release;$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSDK_LibraryPath_x86)</LibraryPath>
+    <LibraryPath>C:\Users\lenya_en\Documents\GitHub\assimp_origin\samples\DevIL\lib;C:\CppLib\zlib\lib;C:\Users\lenya_en\Documents\Visual Studio 2012\Projects\AssimpLibrary\Release;$(VCInstallDir)lib;$(VCInstallDir)atlmfc\lib;$(WindowsSDK_LibraryPath_x86)</LibraryPath>
     <PostBuildEventUseInBuild>false</PostBuildEventUseInBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -97,7 +97,7 @@ copy ..\..\..\bin\assimp_debug-dll_Win32\Assimp32d.dll ..\..\bin
     </ClCompile>
     <Link>
       <AdditionalDependencies>OpenGL32.lib;GLu32.lib;DevIL.lib;Assimp.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Users\lenya_en\Documents\GitHub\assimp_origin\samples\DevIL\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -117,6 +117,9 @@ copy ..\..\..\bin\assimp_release-dll_Win32\Assimp32.dll ..\..\bin
   <ItemGroup>
     <ClInclude Include="src\AnimationController.h" />
     <ClInclude Include="src\MathFunc.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="readme.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
