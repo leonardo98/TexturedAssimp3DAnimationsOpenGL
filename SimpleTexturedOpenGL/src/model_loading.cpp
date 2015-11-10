@@ -367,15 +367,15 @@ LRESULT CALLBACK WndProc(HWND hWnd,				// Handles for this Window
 		case WM_KEYDOWN:		// Is a key pressed?
 			{
 				keys[wParam] = TRUE;	// If so, Mark it as true
-				if (wParam == VK_NUMPAD1)
+				if (wParam == 0x31)
 				{
 					controller.SetAnimIndex(0);
 				}
-				else if (wParam == VK_NUMPAD2)
+				else if (wParam == 0x32)
 				{
 					controller.SetAnimIndex(1, false, 0.6f);
 				}
-				else if (wParam == VK_NUMPAD3)
+				else if (wParam == 0x33)
 				{
 					controller.SetAnimIndex(2, true, 0.3f, true, 3.f);
 				}
